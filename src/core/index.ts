@@ -1,3 +1,1 @@
-const test = () => {}
-
-export default  test
+export { Injection, Flavors } from "./di";

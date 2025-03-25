@@ -45,9 +45,9 @@ Cette compréhension approfondie permet aux développeurs débutants d'écrire d
 
 ### Notre Stack technique
 Nous privilégions une stack moderne et robuste basée principalement sur :
-- ReactJS avec TypeScript et ViteJS
-- tailwindcss et Material-UI pour les styles
-- InversyJS pour l'injection de dépendances
+- [ReactJS](https://react.dev/) avec [TypeScript](https://www.typescriptlang.org/) et [ViteJS](https://vitejs.fr/)
+- [tailwindcss](https://tailwindcss.com/) et [Material-UI](https://mui.com/material-ui/) pour les styles
+- [InversifyJS](https://inversify.io/docs/introduction/getting-started/) pour l'injection de dépendances
 - RxJS pour la programmation réactive
 - @axa-fr/react-oidc pour l'authentification
 - axios-retrofit et Axios pour les appels API
@@ -293,68 +293,22 @@ src/
 
 - **Core**
 
-```typescript
-// inversify.config.ts
-import 'reflect-metadata';
-import { Container } from 'inversify';
-import { IUserRepository } from '../data/repositories/UserRepository';
-import { UserRepository } from '../data/repositories/UserRepository';
-import { UserUseCase } from '../domain/useCases/UserUseCase';
-import { UserInteractor } from '../interactors/UserInteractor';
+  - [Ajouter une injection de dépendance](./doc/injection.md)
+  - [Gérer les configurations globales](./doc/config.md)
+  - [Configurer les appels API](./doc/api.md)
+  - [Gérer l'authentification avec @axa-fr/react-oidc](./doc/auth.md)
 
-const container = new Container();
+- **Data**
 
-container.bind<IUserRepository>('IUserRepository').to(UserRepository);
-container.bind<UserUseCase>(UserUseCase).toSelf();
-container.bind<UserInteractor>(UserInteractor).toSelf();
-
-export { container };
-```
-
+  - [Gérer les DTO et les repositories](./doc/data.md)
+  
 - **Domain**
 
-```typescript
-// UserUseCase.ts
-import { injectable, inject } from 'inversify';
-import { IUserRepository } from '../../data/repositories/UserRepository';
-import { dtoToUser } from '../../data/protocols/UserProtocol';
-import { Observable, from } from 'rxjs';
-import { User } from '../entities/User';
-
-@injectable()
-export class UserUseCase {
-  constructor(@inject('IUserRepository') private userRepository: IUserRepository) {}
-
-  getUser(userId: string): Observable<User> {
-    return from(
-      this.userRepository.fetchUser(userId).then(dto => dtoToUser(dto))
-    );
-  }
-}
-```
+  - [Définir les entités et les cas d'utilisation](./doc/domain.md)
 
 - **Présentation**
 
-```tsx
-// UserComponent.tsx
-import React, { useEffect, useState } from 'react';
-import { container } from '../../core/inversify.config';
-import { UserInteractor } from '../../interactors/UserInteractor';
-
-export const UserComponent: React.FC<{ userId: string }> = ({ userId }) => {
-  const [user, setUser] = useState(null);
-  const userInteractor = container.get(UserInteractor);
-
-  useEffect(() => {
-    const subscription = userInteractor.fetchUserForUI(userId).subscribe(setUser);
-    return () => subscription.unsubscribe();
-  }, [userId, userInteractor]);
-
-  return user ? <div>{user.displayName} ({user.contact})</div> : <div>Chargement...</div>;
-};
-```
-
-Cette implémentation met en avant l'utilisation d'InversifyJS pour une gestion claire et efficace des dépendances, ainsi que RxJS pour offrir une gestion réactive des données métier via Observables.
+  - [Pattern MVVM+I+R](./doc/mvvm.md)
 
 #### Principes SOLID
 
