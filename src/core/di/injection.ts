@@ -20,7 +20,11 @@ export class Injection {
         return Injection.current.get<T>(serviceIdentifier)
     }
 
-    public static register<T>(serviceIdentifier: ServiceIdentifier<T>, implementation: Newable<T> | undefined, pattern: "singleton" | "factory" | undefined): void {
+    public static register<T>(
+        serviceIdentifier: ServiceIdentifier<T>,
+        implementation: Newable<T> | undefined,
+        pattern: "singleton" | "factory" | undefined
+    ): void {
         if (pattern == undefined || pattern === "singleton") {
             Injection._bind(serviceIdentifier, implementation).inSingletonScope()
             return
@@ -28,7 +32,10 @@ export class Injection {
         Injection._bind(serviceIdentifier, implementation).inTransientScope()
     }
 
-    private static _bind<T>(serviceIdentifier: ServiceIdentifier<T>, implementation: Newable<T> | undefined):  BindInWhenOnFluentSyntax<T> {
+    private static _bind<T>(
+        serviceIdentifier: ServiceIdentifier<T>,
+        implementation: Newable<T> | undefined
+    ): BindInWhenOnFluentSyntax<T> {
         if (implementation === undefined) {
             return Injection.current.bind<T>(serviceIdentifier).toSelf()
         }

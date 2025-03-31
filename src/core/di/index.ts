@@ -1,2 +1,2 @@
-export { Injection, InjectionPattern } from "./injection";
+export { Injection } from "./injection";
 export { Flavors } from "./flavors";

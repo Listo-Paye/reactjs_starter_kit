@@ -268,27 +268,42 @@ Voici une structure typique d'un projet ReactJS suivant la Clean Architecture :
 ```
 src/
 ├── core/
-│   ├── config.ts
-│   └── inversify.config.ts
+│   ├── di/
+│   │   ├── injection.config.ts
+│   │   ├── injection.ts
+│   │   ├── flavors.ts
+│   │   ├── configuration.ts
+│   │   └── network/
+│   │       ├── authentication.ts
+│   │       └── retrofit.ts
+│   └── index.ts
 ├── data/
 │   ├── dto/
-│   │   └── UserDto.ts
+│   │   └── user_dto.ts
 │   ├── protocols/
-│   │   └── UserProtocol.ts
-│   └── repositories/
-│       └── UserRepository.ts
+│   │   └── user_protocol.ts
+│   ├── repositories/
+│   │   └── user_repository.ts
+│   └── index.ts
 ├── domain/
 │   ├── entities/
-│   │   └── User.ts
-│   └── useCases/
-│       └── UserUseCase.ts
-├── interactors/
-│   └── UserInteractor.ts
+│   │   └── user_entity.ts
+│   ├── useCases/
+│   │   └── user.ts
+│   └── index.ts
 └── presentation/
-    ├── components/
-    │   └── UserComponent.tsx
-    └── pages/
-        └── UserPage.tsx
+    ├── common/
+    │   └── header.tsx
+    ├── user/
+    │   ├── views/
+    │   │   ├── components/
+    │   │   │   └── detail_component.tsx
+    │   │   └── user_component.tsx
+    │   ├── user_interactor.ts
+    │   ├── user_model.ts
+    │   └── user_viewmodel.ts
+    ├── router.ts
+    └── index.ts
 ```
 
 - **Core**
