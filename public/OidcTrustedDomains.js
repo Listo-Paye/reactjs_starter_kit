@@ -5,20 +5,20 @@
 // Domains used by OIDC server must be also declared here
 
 const trustedDomains = {
-  default: ['https://demo.duendesoftware.com', 'https://kdhttps.auth0.com'],
-  config_classic: ['https://demo.duendesoftware.com'],
-  config_without_silent_login: ['https://demo.duendesoftware.com'],
-  config_without_refresh_token: ['https://demo.duendesoftware.com'],
-  config_without_refresh_token_silent_login: ['https://demo.duendesoftware.com'],
+  default: ['http://localhost:8080', 'https://kdhttps.auth0.com'],
+  config_classic: ['http://localhost:8080'],
+  config_without_silent_login: ['http://localhost:8080'],
+  config_without_refresh_token: ['http://localhost:8080'],
+  config_without_refresh_token_silent_login: ['http://localhost:8080'],
   config_google: ['https://oauth2.googleapis.com', 'https://openidconnect.googleapis.com'],
-  config_with_hash: ['https://demo.duendesoftware.com'],
+  config_with_hash: ['http://localhost:8080'],
 };
 
 // Service worker will continue to give access token to the JavaScript client
 // Ideal to hide refresh token from client JavaScript, but to retrieve access_token for some
 // scenarios which require it. For example, to send it via websocket connection.
 trustedDomains.config_show_access_token = {
-  domains: ['https://demo.duendesoftware.com'],
+  domains: ['http://localhost:8080'],
   showAccessToken: true,
   // convertAllRequestsToCorsExceptNavigate: false,
   // setAccessTokenToNavigateRequests: true,
@@ -26,6 +26,6 @@ trustedDomains.config_show_access_token = {
 
 // This example defines domains used by OIDC server separately from domains to which access tokens will be injected.
 trustedDomains.config_separate_oidc_access_token_domains = {
-  oidcDomains: ['https://demo.duendesoftware.com'],
+  oidcDomains: ['http://localhost:8080'],
   accessTokenDomains: ['https://myapi'],
 };

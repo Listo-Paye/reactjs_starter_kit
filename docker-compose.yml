@@ -6,11 +6,12 @@ services:
       - .:/app
       - /app/node_modules
     environment:
-      - VITE_OIDC_CLIENT_ID=your_client_id
-      - VITE_OIDC_CLIENT_SECRET=your_client_secret
-      - VITE_OIDC_AUTHORITY=http://localhost:8080/auth/realms/mocked-responses
-      - VITE_OIDC_POST_LOGOUT_REDIRECT_URI_SUFFIX=/oidc/logout
-      - VITE_OIDC_SILENT_REDIRECT_URI_SUFFIX=/oidc/silent
+      - VITE_OIDC_CLIENT_ID=mocked-responses-client
+      - VITE_OIDC_CLIENT_SECRET=test
+      - VITE_OIDC_AUTHORITY=http://localhost:8080/realms/mocked-responses
+      - VITE_OIDC_POST_LOGOUT_REDIRECT_URI_SUFFIX=portal/
+      - VITE_OIDC_SILENT_REDIRECT_URI_SUFFIX=silent-reniew/
+      - VITE_OIDC_REDIRECT_URI_SUFFIX=authenticated/
       - VITE_API_URL=http://localhost:3000/api
       - VITE_API_VERSION=v1
     build:

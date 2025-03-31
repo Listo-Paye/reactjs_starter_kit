@@ -1,1 +1,2 @@
-export { Injection, Flavors } from "./di";
+export {Injection, Flavors} from "./di"
+export type { IAuthentication, IConfiguration } from "./di"

@@ -9,6 +9,7 @@ export interface IAuthenticationConfiguration {
     authority: string | undefined
     postLogoutRedirectUriSuffix: string | undefined
     silentRedirectUriSuffix: string | undefined
+    redirectUriSuffix: string | undefined
 }
 
 export interface IApiConfiguration {
