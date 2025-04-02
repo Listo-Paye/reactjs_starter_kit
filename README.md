@@ -275,7 +275,7 @@ src/
 │   │   ├── configuration.ts
 │   │   └── network/
 │   │       ├── authentication.ts
-│   │       └── retrofit.ts
+│   │       └── user_service.ts
 │   └── index.ts
 ├── data/
 │   ├── dto/

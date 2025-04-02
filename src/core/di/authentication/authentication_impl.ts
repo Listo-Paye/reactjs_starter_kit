@@ -37,12 +37,8 @@ export class AuthenticationImpl implements IAuthentication {
     }
 
     silentLogin(): Promise<unknown> {
-        const suffix = this.configuration.authentication.silentRedirectUriSuffix
-        if (suffix?.startsWith("/")) {
-            suffix.substring(1)
-        }
         return this.oidc.loginAsync(
-            `${window.location.origin}/${suffix}`,
+            undefined,
             undefined,
             true
         )

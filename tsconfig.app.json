@@ -8,6 +8,13 @@
     "skipLibCheck": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@data": ["src/data"],
+      "@core": ["src/core"],
+      "@domain": ["src/domain"],
+      "@presentation": ["src/presentation"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",

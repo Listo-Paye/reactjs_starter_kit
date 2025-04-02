@@ -27,7 +27,7 @@ Ce module implémente un système d'authentification sécurisé fondé sur le st
             ▲                          ▲
             |                          |
             |            +---------------------------+
-            └────────────>Injection (InversifyJS)    |
+            └───────────>| Injection (InversifyJS)   |
                          +---------------------------+
 ```
 

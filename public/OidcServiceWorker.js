@@ -491,11 +491,11 @@ const extractConfigurationNameFromCodeVerifier = (chaine) => {
     return "";
   }
 };
-const version = "7.25.6";
-if (typeof trustedTypes !== "undefined" && typeof trustedTypes.createPolicy == "function") {
+const version = "7.25.7";
+if (typeof trustedTypes !== "undefined" && typeof trustedTypes.createPolicy === "function") {
   trustedTypes.createPolicy("default", {
     createScriptURL: function(url) {
-      if (url == scriptFilename) {
+      if (url === scriptFilename) {
         return url;
       } else {
         throw new Error("Untrusted script URL blocked: " + url);
@@ -507,6 +507,7 @@ const _self = self;
 _self.importScripts(scriptFilename);
 const id = Math.round((/* @__PURE__ */ new Date()).getTime() / 1e3).toString();
 const keepAliveJsonFilename = "OidcKeepAliveServiceWorker.json";
+const database = {};
 const handleInstall = (event) => {
   console.log("[OidcServiceWorker] service worker installed " + id);
   event.waitUntil(_self.skipWaiting());
@@ -515,7 +516,6 @@ const handleActivate = (event) => {
   console.log("[OidcServiceWorker] service worker activated " + id);
   event.waitUntil(_self.clients.claim());
 };
-const database = {};
 const keepAliveAsync = async (event) => {
   const originalRequest = event.request;
   const isFromVanilla = originalRequest.headers.has("oidc-vanilla");
@@ -534,7 +534,7 @@ const keepAliveAsync = async (event) => {
 };
 async function generateDpopAsync(originalRequest, currentDatabase, url, extrasClaims = {}) {
   const headersExtras = serializeHeaders(originalRequest.headers);
-  if ((currentDatabase == null ? void 0 : currentDatabase.demonstratingProofOfPossessionConfiguration) && currentDatabase.demonstratingProofOfPossessionJwkJson && (!currentDatabase.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent || currentDatabase.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent && headersExtras["dpop"])) {
+  if ((currentDatabase == null ? void 0 : currentDatabase.demonstratingProofOfPossessionConfiguration) && currentDatabase.demonstratingProofOfPossessionJwkJson && (!currentDatabase.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent || currentDatabase.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent && headersExtras.dpop)) {
     const dpopConfiguration = currentDatabase.demonstratingProofOfPossessionConfiguration;
     const jwk = currentDatabase.demonstratingProofOfPossessionJwkJson;
     const method = originalRequest.method;
@@ -544,201 +544,214 @@ async function generateDpopAsync(originalRequest, currentDatabase, url, extrasCl
       url,
       extrasClaims
     );
-    headersExtras["dpop"] = dpop;
+    headersExtras.dpop = dpop;
     if (currentDatabase.demonstratingProofOfPossessionNonce != null) {
-      headersExtras["nonce"] = currentDatabase.demonstratingProofOfPossessionNonce;
+      headersExtras.nonce = currentDatabase.demonstratingProofOfPossessionNonce;
     }
   }
   return headersExtras;
 }
-const handleFetch = async (event) => {
-  var _a;
-  const originalRequest = event.request;
-  const url = normalizeUrl(originalRequest.url);
-  if (url.includes(keepAliveJsonFilename)) {
-    event.respondWith(keepAliveAsync(event));
-    return;
-  }
-  const currentDatabasesForRequestAccessToken = getCurrentDatabaseDomain(
-    database,
-    url,
-    trustedDomains
-  );
-  const authorization = originalRequest.headers.get("authorization");
-  let authenticationMode = "Bearer";
-  let key = "default";
-  if (authorization) {
-    const split = authorization.split(" ");
-    authenticationMode = split[0];
-    if (split[1].includes("ACCESS_TOKEN_SECURED_BY_OIDC_SERVICE_WORKER_")) {
-      key = split[1].split("ACCESS_TOKEN_SECURED_BY_OIDC_SERVICE_WORKER_")[1];
-    }
-  }
-  const currentDatabaseForRequestAccessToken = currentDatabasesForRequestAccessToken == null ? void 0 : currentDatabasesForRequestAccessToken.find(
-    (c) => c.configurationName.endsWith(key)
-  );
-  if ((_a = currentDatabaseForRequestAccessToken == null ? void 0 : currentDatabaseForRequestAccessToken.tokens) == null ? void 0 : _a.access_token) {
-    while (currentDatabaseForRequestAccessToken.tokens && !isTokensValid(currentDatabaseForRequestAccessToken.tokens)) {
-      await sleep(200);
-    }
-    let requestMode = originalRequest.mode;
-    if (originalRequest.mode !== "navigate" && currentDatabaseForRequestAccessToken.convertAllRequestsToCorsExceptNavigate) {
-      requestMode = "cors";
-    }
-    let headers;
-    if (originalRequest.mode == "navigate" && !currentDatabaseForRequestAccessToken.setAccessTokenToNavigateRequests) {
-      headers = {
-        ...serializeHeaders(originalRequest.headers)
-      };
-    } else {
-      if (authenticationMode.toLowerCase() == "dpop" || !currentDatabaseForRequestAccessToken.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent && currentDatabaseForRequestAccessToken.demonstratingProofOfPossessionConfiguration) {
-        const claimsExtras = {
-          ath: await base64urlOfHashOfASCIIEncodingAsync(
-            currentDatabaseForRequestAccessToken.tokens.access_token
-          )
-        };
-        const dpopHeaders = await generateDpopAsync(
-          originalRequest,
-          currentDatabaseForRequestAccessToken,
+const handleFetch = (event) => {
+  event.respondWith(
+    (async () => {
+      var _a, _b;
+      try {
+        const originalRequest = event.request;
+        const url = normalizeUrl(originalRequest.url);
+        if (url.includes(keepAliveJsonFilename)) {
+          return keepAliveAsync(event);
+        }
+        const currentDatabasesForRequestAccessToken = getCurrentDatabaseDomain(
+          database,
           url,
-          claimsExtras
+          trustedDomains
         );
-        headers = {
-          ...dpopHeaders,
-          authorization: `DPoP ${currentDatabaseForRequestAccessToken.tokens.access_token}`
-        };
-      } else {
-        headers = {
-          ...serializeHeaders(originalRequest.headers),
-          authorization: `${authenticationMode} ${currentDatabaseForRequestAccessToken.tokens.access_token}`
-        };
-      }
-    }
-    let init;
-    if (originalRequest.mode === "navigate") {
-      init = {
-        headers
-      };
-    } else {
-      init = {
-        headers,
-        mode: requestMode
-      };
-    }
-    const newRequest = new Request(originalRequest, init);
-    event.respondWith(fetch(newRequest));
-    return;
-  }
-  if (event.request.method !== "POST") {
-    return;
-  }
-  let currentDatabase = null;
-  const currentDatabases = getMatchingOidcConfigurations(database, url);
-  const numberDatabase = currentDatabases.length;
-  if (numberDatabase > 0) {
-    const responsePromise = new Promise((resolve, reject) => {
-      const clonedRequest = originalRequest.clone();
-      const response = clonedRequest.text().then(async (actualBody) => {
-        var _a2;
-        if (actualBody.includes(TOKEN.REFRESH_TOKEN) || actualBody.includes(TOKEN.ACCESS_TOKEN)) {
-          let headers = serializeHeaders(originalRequest.headers);
-          let newBody = actualBody;
-          for (let i = 0; i < numberDatabase; i++) {
-            const currentDb = currentDatabases[i];
-            if ((currentDb == null ? void 0 : currentDb.tokens) != null) {
+        const authorization = originalRequest.headers.get("authorization");
+        let authenticationMode = "Bearer";
+        let key = "default";
+        if (authorization) {
+          const split = authorization.split(" ");
+          authenticationMode = split[0];
+          if ((_a = split[1]) == null ? void 0 : _a.includes("ACCESS_TOKEN_SECURED_BY_OIDC_SERVICE_WORKER_")) {
+            key = split[1].split("ACCESS_TOKEN_SECURED_BY_OIDC_SERVICE_WORKER_")[1];
+          }
+        }
+        const currentDatabaseForRequestAccessToken = currentDatabasesForRequestAccessToken == null ? void 0 : currentDatabasesForRequestAccessToken.find(
+          (c) => c.configurationName.endsWith(key)
+        );
+        if ((_b = currentDatabaseForRequestAccessToken == null ? void 0 : currentDatabaseForRequestAccessToken.tokens) == null ? void 0 : _b.access_token) {
+          while (currentDatabaseForRequestAccessToken.tokens && !isTokensValid(currentDatabaseForRequestAccessToken.tokens)) {
+            await sleep(200);
+          }
+          let requestMode = originalRequest.mode;
+          if (originalRequest.mode !== "navigate" && currentDatabaseForRequestAccessToken.convertAllRequestsToCorsExceptNavigate) {
+            requestMode = "cors";
+          }
+          let headers;
+          if (originalRequest.mode === "navigate" && !currentDatabaseForRequestAccessToken.setAccessTokenToNavigateRequests) {
+            headers = {
+              ...serializeHeaders(originalRequest.headers)
+            };
+          } else {
+            if (authenticationMode.toLowerCase() === "dpop" || !currentDatabaseForRequestAccessToken.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent && currentDatabaseForRequestAccessToken.demonstratingProofOfPossessionConfiguration) {
               const claimsExtras = {
-                ath: await base64urlOfHashOfASCIIEncodingAsync(currentDb.tokens.access_token)
+                ath: await base64urlOfHashOfASCIIEncodingAsync(
+                  currentDatabaseForRequestAccessToken.tokens.access_token
+                )
               };
-              headers = await generateDpopAsync(originalRequest, currentDb, url, claimsExtras);
-              const keyRefreshToken = encodeURIComponent(
-                `${TOKEN.REFRESH_TOKEN}_${currentDb.configurationName}`
+              const dpopHeaders = await generateDpopAsync(
+                originalRequest,
+                currentDatabaseForRequestAccessToken,
+                url,
+                claimsExtras
               );
-              if (actualBody.includes(keyRefreshToken)) {
-                newBody = newBody.replace(
-                  keyRefreshToken,
-                  encodeURIComponent(currentDb.tokens.refresh_token)
-                );
-                currentDatabase = currentDb;
-                break;
-              }
-              const keyAccessToken = encodeURIComponent(
-                `${TOKEN.ACCESS_TOKEN}_${currentDb.configurationName}`
-              );
-              if (actualBody.includes(keyAccessToken)) {
-                newBody = newBody.replace(
-                  keyAccessToken,
-                  encodeURIComponent(currentDb.tokens.access_token)
-                );
-                currentDatabase = currentDb;
-                break;
-              }
+              headers = {
+                ...dpopHeaders,
+                authorization: `DPoP ${currentDatabaseForRequestAccessToken.tokens.access_token}`
+              };
+            } else {
+              headers = {
+                ...serializeHeaders(originalRequest.headers),
+                authorization: `${authenticationMode} ${currentDatabaseForRequestAccessToken.tokens.access_token}`
+              };
             }
           }
-          const fetchPromise = fetch(originalRequest, {
-            body: newBody,
-            method: clonedRequest.method,
-            headers: {
-              ...headers
-            },
-            mode: clonedRequest.mode,
-            cache: clonedRequest.cache,
-            redirect: clonedRequest.redirect,
-            referrer: clonedRequest.referrer,
-            credentials: clonedRequest.credentials,
-            integrity: clonedRequest.integrity
-          });
-          if (((_a2 = currentDatabase == null ? void 0 : currentDatabase.oidcServerConfiguration) == null ? void 0 : _a2.revocationEndpoint) && url.startsWith(normalizeUrl(currentDatabase.oidcServerConfiguration.revocationEndpoint))) {
-            return fetchPromise.then(async (response2) => {
-              const text = await response2.text();
-              return new Response(text, response2);
-            });
-          }
-          return fetchPromise.then(hideTokens(currentDatabase));
-        } else if (actualBody.includes("code_verifier=") && extractConfigurationNameFromCodeVerifier(actualBody) != null) {
-          const currentLoginCallbackConfigurationName = extractConfigurationNameFromCodeVerifier(actualBody);
-          currentDatabase = database[currentLoginCallbackConfigurationName];
-          let newBody = actualBody;
-          const codeVerifier = currentDatabase.codeVerifier;
-          if (codeVerifier != null) {
-            newBody = replaceCodeVerifier(newBody, codeVerifier);
-          }
-          const headersExtras = await generateDpopAsync(originalRequest, currentDatabase, url);
-          return fetch(originalRequest, {
-            body: newBody,
-            method: clonedRequest.method,
-            headers: {
-              ...headersExtras
-            },
-            mode: clonedRequest.mode,
-            cache: clonedRequest.cache,
-            redirect: clonedRequest.redirect,
-            referrer: clonedRequest.referrer,
-            credentials: clonedRequest.credentials,
-            integrity: clonedRequest.integrity
-          }).then(hideTokens(currentDatabase));
+          const init = originalRequest.mode === "navigate" ? { headers } : { headers, mode: requestMode };
+          const newRequest = new Request(originalRequest, init);
+          return fetch(newRequest);
         }
-        return fetch(originalRequest, {
-          body: actualBody,
-          method: clonedRequest.method,
-          headers: {
-            ...serializeHeaders(originalRequest.headers)
-          },
-          mode: clonedRequest.mode,
-          cache: clonedRequest.cache,
-          redirect: clonedRequest.redirect,
-          referrer: clonedRequest.referrer,
-          credentials: clonedRequest.credentials,
-          integrity: clonedRequest.integrity
-        });
-      });
-      response.then((r) => {
-        resolve(r);
-      }).catch((err) => {
-        reject(err);
-      });
-    });
-    event.respondWith(responsePromise);
-  }
+        if (event.request.method !== "POST") {
+          return fetch(originalRequest);
+        }
+        const currentDatabases = getMatchingOidcConfigurations(database, url);
+        const numberDatabase = currentDatabases.length;
+        if (numberDatabase > 0) {
+          const responsePromise = new Promise((resolve, reject) => {
+            const clonedRequest = originalRequest.clone();
+            clonedRequest.text().then(async (actualBody) => {
+              var _a2;
+              let currentDatabase = null;
+              try {
+                if (actualBody.includes(TOKEN.REFRESH_TOKEN) || actualBody.includes(TOKEN.ACCESS_TOKEN)) {
+                  let headers = serializeHeaders(originalRequest.headers);
+                  let newBody = actualBody;
+                  for (let i = 0; i < numberDatabase; i++) {
+                    const currentDb = currentDatabases[i];
+                    if (currentDb == null ? void 0 : currentDb.tokens) {
+                      const claimsExtras = {
+                        ath: await base64urlOfHashOfASCIIEncodingAsync(
+                          currentDb.tokens.access_token
+                        )
+                      };
+                      headers = await generateDpopAsync(
+                        originalRequest,
+                        currentDb,
+                        url,
+                        claimsExtras
+                      );
+                      const keyRefreshToken = encodeURIComponent(
+                        `${TOKEN.REFRESH_TOKEN}_${currentDb.configurationName}`
+                      );
+                      if (actualBody.includes(keyRefreshToken)) {
+                        newBody = newBody.replace(
+                          keyRefreshToken,
+                          encodeURIComponent(currentDb.tokens.refresh_token)
+                        );
+                        currentDatabase = currentDb;
+                        break;
+                      }
+                      const keyAccessToken = encodeURIComponent(
+                        `${TOKEN.ACCESS_TOKEN}_${currentDb.configurationName}`
+                      );
+                      if (actualBody.includes(keyAccessToken)) {
+                        newBody = newBody.replace(
+                          keyAccessToken,
+                          encodeURIComponent(currentDb.tokens.access_token)
+                        );
+                        currentDatabase = currentDb;
+                        break;
+                      }
+                    }
+                  }
+                  const fetchPromise = fetch(originalRequest, {
+                    body: newBody,
+                    method: clonedRequest.method,
+                    headers,
+                    mode: clonedRequest.mode,
+                    cache: clonedRequest.cache,
+                    redirect: clonedRequest.redirect,
+                    referrer: clonedRequest.referrer,
+                    credentials: clonedRequest.credentials,
+                    integrity: clonedRequest.integrity
+                  });
+                  if (((_a2 = currentDatabase == null ? void 0 : currentDatabase.oidcServerConfiguration) == null ? void 0 : _a2.revocationEndpoint) && url.startsWith(
+                    normalizeUrl(currentDatabase.oidcServerConfiguration.revocationEndpoint)
+                  )) {
+                    const resp = await fetchPromise;
+                    const txt = await resp.text();
+                    resolve(new Response(txt, resp));
+                    return;
+                  }
+                  const hidden = await fetchPromise.then(
+                    hideTokens(currentDatabase)
+                  );
+                  resolve(hidden);
+                  return;
+                }
+                if (actualBody.includes("code_verifier=") && extractConfigurationNameFromCodeVerifier(actualBody) != null) {
+                  const currentLoginCallbackConfigurationName = extractConfigurationNameFromCodeVerifier(actualBody);
+                  currentDatabase = database[currentLoginCallbackConfigurationName];
+                  let newBody = actualBody;
+                  const codeVerifier = currentDatabase.codeVerifier;
+                  if (codeVerifier != null) {
+                    newBody = replaceCodeVerifier(newBody, codeVerifier);
+                  }
+                  const headersExtras = await generateDpopAsync(
+                    originalRequest,
+                    currentDatabase,
+                    url
+                  );
+                  const resp = await fetch(originalRequest, {
+                    body: newBody,
+                    method: clonedRequest.method,
+                    headers: headersExtras,
+                    mode: clonedRequest.mode,
+                    cache: clonedRequest.cache,
+                    redirect: clonedRequest.redirect,
+                    referrer: clonedRequest.referrer,
+                    credentials: clonedRequest.credentials,
+                    integrity: clonedRequest.integrity
+                  });
+                  const hidden = await hideTokens(currentDatabase)(resp);
+                  resolve(hidden);
+                  return;
+                }
+                const normalResp = await fetch(originalRequest, {
+                  body: actualBody,
+                  method: clonedRequest.method,
+                  headers: serializeHeaders(originalRequest.headers),
+                  mode: clonedRequest.mode,
+                  cache: clonedRequest.cache,
+                  redirect: clonedRequest.redirect,
+                  referrer: clonedRequest.referrer,
+                  credentials: clonedRequest.credentials,
+                  integrity: clonedRequest.integrity
+                });
+                resolve(normalResp);
+              } catch (err) {
+                reject(err);
+              }
+            }).catch(reject);
+          });
+          return responsePromise;
+        }
+        return fetch(originalRequest);
+      } catch (err) {
+        console.error("[OidcServiceWorker] handleFetch error:", err);
+        return new Response("Service Worker Error", { status: 500 });
+      }
+    })()
+  );
 };
 const handleMessage = async (event) => {
   var _a;
@@ -799,24 +812,21 @@ const handleMessage = async (event) => {
       return;
     case "init": {
       const oidcServerConfiguration = data.data.oidcServerConfiguration;
-      const trustedDomain2 = trustedDomains[configurationName];
-      const domains = getDomains(trustedDomain2, "oidc");
+      const domains = getDomains(trustedDomain, "oidc");
       if (!domains.some((domain) => domain === acceptAnyDomainToken)) {
         [
           oidcServerConfiguration.tokenEndpoint,
           oidcServerConfiguration.revocationEndpoint,
           oidcServerConfiguration.userInfoEndpoint,
           oidcServerConfiguration.issuer
-        ].forEach((url) => {
-          checkDomain(domains, url);
+        ].forEach((u) => {
+          checkDomain(domains, u);
         });
       }
       currentDatabase.oidcServerConfiguration = oidcServerConfiguration;
       currentDatabase.oidcConfiguration = data.data.oidcConfiguration;
       if (currentDatabase.demonstratingProofOfPossessionConfiguration == null) {
-        const demonstratingProofOfPossessionConfiguration = getDpopConfiguration(
-          trustedDomains[configurationName]
-        );
+        const demonstratingProofOfPossessionConfiguration = getDpopConfiguration(trustedDomain);
         if (demonstratingProofOfPossessionConfiguration != null) {
           if (currentDatabase.oidcConfiguration.demonstrating_proof_of_possession) {
             console.warn(
@@ -827,7 +837,7 @@ const handleMessage = async (event) => {
           currentDatabase.demonstratingProofOfPossessionJwkJson = await generateJwkAsync(self)(
             demonstratingProofOfPossessionConfiguration.generateKeyAlgorithm
           );
-          currentDatabase.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent = getDpopOnlyWhenDpopHeaderPresent(trustedDomains[configurationName]) ?? false;
+          currentDatabase.demonstratingProofOfPossessionOnlyWhenDpopHeaderPresent = getDpopOnlyWhenDpopHeaderPresent(trustedDomain) ?? false;
         }
       }
       if (!currentDatabase.tokens) {
@@ -838,9 +848,7 @@ const handleMessage = async (event) => {
           version
         });
       } else {
-        const tokens = {
-          ...currentDatabase.tokens
-        };
+        const tokens = { ...currentDatabase.tokens };
         if (currentDatabase.hideAccessToken) {
           tokens.access_token = `${TOKEN.ACCESS_TOKEN}_${configurationName}#tabId=${tabId}`;
         }
@@ -888,9 +896,10 @@ const handleMessage = async (event) => {
       return;
     }
     case "getCodeVerifier": {
+      const codeVerifier = currentDatabase.codeVerifier != null ? `${TOKEN.CODE_VERIFIER}_${configurationName}#tabId=${tabId}` : null;
       port.postMessage({
         configurationName,
-        codeVerifier: currentDatabase.codeVerifier != null ? `${TOKEN.CODE_VERIFIER}_${configurationName}#tabId=${tabId}` : null
+        codeVerifier
       });
       return;
     }
@@ -918,9 +927,8 @@ const handleMessage = async (event) => {
       port.postMessage({ configurationName, nonce });
       return;
     }
-    default: {
+    default:
       return;
-    }
   }
 };
 _self.addEventListener("install", handleInstall);

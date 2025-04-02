@@ -12,7 +12,7 @@ services:
       - VITE_OIDC_POST_LOGOUT_REDIRECT_URI_SUFFIX=portal/
       - VITE_OIDC_SILENT_REDIRECT_URI_SUFFIX=silent-reniew/
       - VITE_OIDC_REDIRECT_URI_SUFFIX=authenticated/
-      - VITE_API_URL=http://localhost:3000/api
+      - VITE_API_URL=http://localhost:3000
       - VITE_API_VERSION=v1
     build:
       target: development
