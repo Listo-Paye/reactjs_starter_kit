@@ -12,7 +12,8 @@ export class ConfigurationStub implements IConfiguration {
             clientSecret: "secret",
             authority: "https://example.com",
             postLogoutRedirectUriSuffix: "portal/",
-            silentRedirectUriSuffix: "silent-renewal/"
+            silentRedirectUriSuffix: "silent-renewal/",
+            redirectUriSuffix: "portal/"
         }
         this.api = {
             apiUrl: "https://api.example.com",
