@@ -269,25 +269,37 @@ Voici une structure typique d'un projet ReactJS suivant la Clean Architecture :
 src/
 ├── core/
 │   ├── di/
+│   │   ├── authentication
+│   │   │   ├── authentication.ts
+│   │   │   ├── authentication_impl.ts
+│   │   │   ├── authentication_stub.ts
+│   │   │   └── index.ts
+│   │   ├── configuration
+│   │   │   ├── configuration.ts
+│   │   │   ├── configuration_impl.ts
+│   │   │   ├── configuration_stub.ts
+│   │   │   └── index.ts
+│   │   ├── network
+│   │   │   ├── network.ts
+│   │   │   ├── network_impl.ts
+│   │   │   ├── network_stub.ts
+│   │   │   └── index.ts
+│   │   ├── flavors.ts
 │   │   ├── injection.config.ts
 │   │   ├── injection.ts
-│   │   ├── flavors.ts
-│   │   ├── configuration.ts
-│   │   └── network/
-│   │       ├── authentication.ts
-│   │       └── user_service.ts
+│   │   └── index.ts
 │   └── index.ts
 ├── data/
 │   ├── dto/
 │   │   └── user_dto.ts
-│   ├── protocols/
-│   │   └── user_protocol.ts
 │   ├── repositories/
 │   │   └── user_repository.ts
 │   └── index.ts
 ├── domain/
 │   ├── entities/
 │   │   └── user_entity.ts
+│   ├── protocols/
+│   │   └── user_protocol.ts
 │   ├── useCases/
 │   │   └── user.ts
 │   └── index.ts

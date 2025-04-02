@@ -1,5 +1,5 @@
 import {UserService} from "./user_service"
 
-export interface Network {
+export interface INetwork {
     get userService(): UserService;
 }

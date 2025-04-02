@@ -1,5 +1,5 @@
 import {inject, injectable} from "inversify"
-import {Network} from "./network"
+import {INetwork} from "./network"
 import { UserService } from "./user_service"
 import {RequestInterceptorFunction, ServiceBuilder} from "axios-retrofit"
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from "axios"
@@ -7,7 +7,7 @@ import {AxiosCacheInstance, setupCache} from "axios-cache-interceptor"
 import type {IAuthentication, IConfiguration} from "@core"
 
 @injectable()
-export class NetworkImpl implements Network {
+export class NetworkImpl implements INetwork {
     private _userService?: UserService
     private _oidcInterceptor: RequestInterceptorFunction = (config: InternalAxiosRequestConfig) => {
         config.headers.set("Authorization", `Bearer ${this._oidc.getAccessToken()}`)

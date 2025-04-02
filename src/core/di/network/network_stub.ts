@@ -1,5 +1,5 @@
 import {inject, injectable} from "inversify"
-import {Network} from "./network"
+import {INetwork} from "./network"
 import { UserService } from "./user_service"
 import {RequestInterceptorFunction, ServiceBuilder} from "axios-retrofit"
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from "axios"
@@ -9,7 +9,7 @@ import path from "path"
 import type {IConfiguration} from "@core"
 
 @injectable()
-export class NetworkStub implements Network {
+export class NetworkStub implements INetwork {
     private _userService?: UserService
     private _mockedInterceptor: RequestInterceptorFunction = (config: InternalAxiosRequestConfig) => {
         try {
