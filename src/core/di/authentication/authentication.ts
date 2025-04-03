@@ -2,7 +2,7 @@ import {Observable} from "rxjs";
 
 export interface IAuthentication {
     login(
-        callbackPath: string | undefined,
+        callbackPath?: string,
     ): Promise<unknown>
     silentLogin(): Promise<unknown>
     logout(

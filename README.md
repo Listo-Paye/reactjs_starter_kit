@@ -310,10 +310,10 @@ src/
     │   ├── views/
     │   │   ├── components/
     │   │   │   └── detail_component.tsx
-    │   │   └── user_component.tsx
-    │   ├── user_interactor.ts
-    │   ├── user_model.ts
-    │   └── user_viewmodel.ts
+    │   │   └── user.tsx
+    │   ├── user.interactor.ts
+    │   ├── user.model.ts
+    │   └── user.viewmodel.ts
     ├── router.ts
     └── index.ts
 ```

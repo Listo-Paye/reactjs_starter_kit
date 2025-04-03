@@ -9,7 +9,7 @@ services:
       - VITE_OIDC_CLIENT_ID=mocked-responses-client
       - VITE_OIDC_CLIENT_SECRET=test
       - VITE_OIDC_AUTHORITY=http://localhost:8080/realms/mocked-responses
-      - VITE_OIDC_POST_LOGOUT_REDIRECT_URI_SUFFIX=portal/
+      - VITE_OIDC_POST_LOGOUT_REDIRECT_URI_SUFFIX=/
       - VITE_OIDC_SILENT_REDIRECT_URI_SUFFIX=silent-reniew/
       - VITE_OIDC_REDIRECT_URI_SUFFIX=authenticated/
       - VITE_API_URL=http://localhost:3000
